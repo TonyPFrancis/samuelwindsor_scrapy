@@ -143,7 +143,7 @@ class SamuelWindsorSpider(Spider):
 
         # fetching size
         size = response.xpath(
-            "//select[@id=\"SkuRecNum\"]/option/text()").extract()[1:]
+            "//select[@name=\"SKURecNum\"]/option/text()").extract()[1:]
         size = [x.strip().split('-')[0].strip() for x in size]
         item['size'] = size
 
@@ -221,4 +221,5 @@ class SamuelWindsorSpider(Spider):
         print ">>>>>>>>>>"
         print "ITEM"
         print item
+        yield item
 
