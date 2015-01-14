@@ -2,7 +2,7 @@ __author__ = 'tony'
 from scrapy import Spider
 from scrapy.http import Request
 from scrapy.shell import inspect_response
-
+from samuelwindsor.items import SamuelwindsorItem
 
 class SamuelWindsorSpider(Spider):
 
@@ -16,6 +16,7 @@ class SamuelWindsorSpider(Spider):
     ]
 
     # base_url of spider
+    base_url = 'http://www.samuel-windsor.co.uk/'
 
     # variable to store main_categories
     main_categories = []
@@ -69,7 +70,7 @@ class SamuelWindsorSpider(Spider):
                 for y in sub_categories_selector[x]:
                     yield Request(url=y, callback=self.parse_category)
 
-    def parse_category(selfself, response):
+    def parse_category(self, response):
         '''
         function to fetch products from categories
         :param selfself:
@@ -80,4 +81,29 @@ class SamuelWindsorSpider(Spider):
         print ">>>>>>>>>>"
         print "CATGORY URL"
         print response.url
+
+        # fetching products from category
+        product_urls = response.xpath("//div[@class=\"prodbox\"]/a/@href").extract()
+        # requesting for products urls
+        if product_urls:
+            for x in product_urls:
+                yield Request(url = self.base_url+x, callback= self.parse_product)
+
+
+
+
+
+    def parse_product(self, response):
+        '''
+        function to parse products
+        :param response:
+        :return:
+        '''
+
+        print ">>>>>>>>>>"
+        print "PRODUCT URL"
+        print response.url
+
+        # item of SamuelwindsorItem
+        item = SamuelwindsorItem()
         inspect_response(response)
