@@ -3,6 +3,8 @@ from scrapy import Spider
 from scrapy.http import Request
 from scrapy.shell import inspect_response
 from samuelwindsor.items import SamuelwindsorItem
+import re
+from datetime import datetime
 
 class SamuelWindsorSpider(Spider):
 
@@ -21,6 +23,9 @@ class SamuelWindsorSpider(Spider):
     # variable to store main_categories
     main_categories = []
     sub_categories = {}
+
+    # current runtime of spider
+    current_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
     def parse(self, response):
         '''
@@ -106,4 +111,23 @@ class SamuelWindsorSpider(Spider):
 
         # item of SamuelwindsorItem
         item = SamuelwindsorItem()
+
+        # fetching crawl_date
+        item['crawl_date'] = self.current_time
+
+        
+        # fetching id
+        item['id'] = response.url
+
+        # fetching product_description
+        product_description = response.xpath("//div[@id=\"description\"]//text()").extract()
+        product_description = ". ".join([x.strip() for x in product_description if x.strip()])
+        item['product_description'] = product_description
+
+        # fetching product_id
+        product_id = response.xpath("//p[@class=\"prodcode\"]/text()").extract()[0]
+        product_id = product_id.rstrip('-')
+        product_id = re.split(r'\s*:?', product_id)[-1]
+        item['product_id'] = product_id
+
         inspect_response(response)

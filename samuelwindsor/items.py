@@ -11,6 +11,7 @@ import scrapy
 class SamuelwindsorItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
+
     product_description = scrapy.Field()
     country = scrapy.Field()
     country_slug = scrapy.Field()
