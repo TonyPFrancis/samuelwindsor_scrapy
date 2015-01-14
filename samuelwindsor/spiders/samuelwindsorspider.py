@@ -115,7 +115,7 @@ class SamuelWindsorSpider(Spider):
         # fetching crawl_date
         item['crawl_date'] = self.current_time
 
-        
+
         # fetching id
         item['id'] = response.url
 
