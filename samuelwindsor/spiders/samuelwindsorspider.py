@@ -32,6 +32,7 @@ class SamuelWindsorSpider(Spider):
 
     # total product count
     total_product = 0
+    fetch_count = 0
 
     def parse(self, response):
         '''
@@ -162,7 +163,14 @@ class SamuelWindsorSpider(Spider):
         # changing images to higher resolution
         product_img = [
             "products/optimised/".join(x.split("tinythumbs/thumb-")) for x in product_img]
-        item['product_img'] = product_img
+        # checking whether any image links are obtained from thumbs frame
+        if product_img:
+            item['product_img'] = product_img
+        else:
+            # if product_img is empty, create it from existing big image
+            product_img = self.base_url + response.xpath("//img[@id=\"zoomImage\"]/@src").extract()[0]
+            product_img = "products/optimised/".join(product_img.split("products/2-400-"))
+            item['product_img'] = product_img
 
         # fetching country
         country = "United Kingdom"
@@ -188,14 +196,30 @@ class SamuelWindsorSpider(Spider):
         sub_category = response.xpath(
             "//span[@itemprop=\"title\"]/text()").extract()[0]
         main_category = None
+        # finding main_category
         for k, v in self.sub_categories.items():
-            if sub_category in v:
+            if sub_category.lower() in [x.lower() for x in v]:
                 main_category = k
                 break
-
+        # if cant find main_category
         if main_category == None:
             sub_category = None
-
+            # fetch keyword to find match with category
+            keyword = response.xpath("//meta[@name=\"keywords\"]/@content").extract()[0]
+            keyword = [x.strip() for x in re.split(r'[,.]', keyword) if x.strip()]
+            # fetching tokens from webpage to match with category
+            fetched_tokens = response.xpath("//div[@id=\"size\"]/div[@class=\"tab-content-guide\"]//h3/text()").extract()
+            fetched_tokens = '. '.join(fetched_tokens)
+            fetched_tokens = [x.strip() for x in re.split(r'[,.]', fetched_tokens) if x.strip()]
+            keyword.extend(fetched_tokens)
+            keyword = [x.lower() for x in keyword]
+            for k, v in self.sub_categories.items():
+                for sub_lr in [x.lower() for x in v]:
+                    if sub_lr in keyword:
+                        self.fetch_count += 1
+                        sub_category = sub_lr
+                        main_category = k
+                        break
         # assigning main_category
         item['main_category'] = main_category
 
@@ -218,6 +242,9 @@ class SamuelWindsorSpider(Spider):
         print "TOTAL PRODUCT"
         self.total_product += 1
         print self.total_product
+        print ">>>>>>>>>>"
+        print "FETCH COUNT"
+        print self.fetch_count
         print ">>>>>>>>>>"
         print "ITEM"
         print item
